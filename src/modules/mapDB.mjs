@@ -23,7 +23,7 @@ export async function mapDB() {
 
     async function getScores() {
         await osuAPIv1.get(`/get_beatmaps?k=${config.osu.APIv1}&since=${date}&a=0`).then(async res => {
-            if (Number(new Date(res.data[1].approved_date)) > lastDate - 1) {
+            if (Number(new Date(res.data[1].approved_date)) > date - 1) {
                 date = Date.now();
                 console.log("No more maps found. Requesting for new maps in 1 hour.");
                 setTimeout(getScores, 1000 * 60 * 60);
@@ -32,8 +32,9 @@ export async function mapDB() {
                     if(Number(map.approved) === 2 || Number(map.approved) === 1) {
                         dbQueue.push(["REPLACE INTO beatmaps VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", [Number(map.beatmap_id), Number(map.beatmapset_id), Number(map.approved), Number(map.mode), map.submit_date, map.approved_date, map.last_update, String(map.creator), Number(map.creator_id), String(map.artist), String(map.bpm), Number(map.difficultyrating), Number(map.diff_aim), Number(map.diff_speed), Number(map.diff_size), Number(map.diff_overall), Number(map.diff_approach), Number(map.diff_drain), Number(map.hit_length), Number(map.total_length), Number(map.max_combo), Number(map.genre_id), Number(map.language_id), String(map.title), String(map.source), String(map.version), String(map.file_md5), String(map.tags), Number(map.count_normal), Number(map.count_slider), Number(map.count_spinner), Number(map.storyboard), Number(map.video), Number(map.download_unavailable), Number(map.audio_unavailable)]])
                         lastDate = Number(new Date(map.approved_date));
+                        date = map.approved_date;
                     }
-                })
+                });
                 await priorityDB("SELECT COUNT(*) FROM beatmaps").then(data => {
                     console.log("Currently indexed beatmaps: " + data[0]['COUNT(*)'])
                 });
